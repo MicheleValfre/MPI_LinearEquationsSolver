@@ -18,5 +18,5 @@ make clean
 ```
 
 ## Data
-The solver works on a system of linear equations in the form $$Ax=b$$.\
-The data are specified using a csv file where, for each line $$i$$, the last element is treated as $$b_{i}$$.
+The solver works on a system of linear equations in the form Ax=b.
+The data are specified using a csv file where, for each line i, the last element is treated as b[i].
