@@ -1,4 +1,5 @@
-# Parallel Linear Equations Solver Using The Jacobi Method
+# Parallel Linear Equations System Solver Using The Jacobi Method
+The following is a linear equations system solver developed for a university project. Both the sequential and parallel versions of the code are included.
 
 ## Build
 In order to build the program, create a build directory and run the Makefile:
