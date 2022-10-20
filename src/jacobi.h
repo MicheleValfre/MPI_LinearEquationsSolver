@@ -7,6 +7,7 @@
 #include <cstring>
 #include <complex>
 #include <vector>
+#include <mpi.h>
 
 
 template<typename T> 
@@ -153,6 +154,13 @@ class LinEqSystem{
                 x = new_x;
             }
         }
+
+        void jacobi_par(int limit){
+            MPI::Init();
+            printf("HELLO");
+            MPI::Finalize();
+        }
+
 
         std::vector<T> getXVals(){
             return x;
