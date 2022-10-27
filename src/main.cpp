@@ -1,85 +1,60 @@
 #include <iostream>
-#include <cctype>
-#include <complex>
+#include <vector>
 #include <string>
+
 #include "jacobi.h"
 
-enum types{
-    REAL,
-    COMPLEX
-    //OTHERS?
-};
-
-enum algorithms{
-    SEQUENTIAL,
-    PARALLEL,
-};
-
 void print_help(){
-    std::cout << "usage: ./solver {filename} {number of iterations} {datatype} {algorithm}\nwhere datatype := R(EAL) || C(OMPLEX)\nand algorithm := S(EQUENTIAL) || P(ARALLEL)" << std::endl;
+    std::cout << std::endl << "##################JACOBI################" << std::endl << std::endl << "usage: ./solver <algo_type> <n_iterations> <file>" << std::endl << std::endl << "########################################" << std::endl << std::endl ;
+}
+
+int parse_args(int &argc, char ** &argv,jacobi_utils::algo_t &type, int &iterations, std::string &fpath){
+
+    if (argc != 4){
+        print_help();
+        return 0;
+    } 
+
+    if(argv[1][0] == 'P')
+        type = jacobi_utils::parallel;
+    else if (argv[1][0] == 'S')
+        type = jacobi_utils::sequential;
+    else{
+        std::cerr << "Bad algorithm type: " << argv[1][0] << std::endl;
+        print_help();
+        return 0;
+    }
+
+
+    std::string tmp(argv[2]);
+    try{
+        iterations = std::stoi(tmp);
+    }
+    catch (const std::invalid_argument& ia) {
+	  std::cerr << "Invalid iterations number: " << tmp << std::endl;
+    }
+
+    fpath = std::string(argv[3]);
+
+    return 1;
 }
 
 int main(int argc, char ** argv){
-    int type = REAL;
-    int algorithm = SEQUENTIAL;
-    int iterations = 0;
 
-    
-    if (argc == 5) {
-        if (argv[3][0] == 'R')
-            type = REAL;
-        else if (argv[3][0] == 'C')
-            type = COMPLEX;
-        else{
-            std::cerr << "Bad type: " << argv[3] << std::endl;
-            print_help();
-            return 0;
-        }
+    jacobi_utils::algo_t type;
+    int iterations;
+    std::string fpath;
+    std::vector<long double> x;
 
-        if (argv[4][0] == 'S')
-            algorithm = SEQUENTIAL;
-        else if (argv[4][0] == 'P')
-            algorithm = PARALLEL;
-        else{
-            std::cerr << "Bad algorithm: " << argv[4] << std::endl;
-            print_help();
-            return 0;
-        }
-    }
-    else {
-        print_help();
+    if (!parse_args(argc, argv, type, iterations, fpath))
         return 0;
-    }
 
-
-    try {
-        iterations = std::stoi(argv[2]);
+    LinearEquationsSystem lin_sys(fpath);
+    lin_sys.jacobi(iterations,type);
+    x = lin_sys.getX();    
+    for (auto it = x.begin(); it != x.end(); it++){
+        std::cout << std::to_string(*it) << std::endl;
     }
-    catch (std::exception& exc){
-        std::cerr << "Bad number of iterations: " << argv[2] << std::endl;
-        print_help();
-        return 0;
-    }
-
-    if (type == REAL){
-        LinEqSystem<long double> * sys = LinEqSystem<long double>::fromFile(argv[1],&LinEqUtils::real_parser,&LinEqUtils::real_mul,&LinEqUtils::real_sum, &LinEqUtils::real_div, &LinEqUtils::real_sub);
-        if (algorithm == SEQUENTIAL)
-            sys->jacobi_seq(iterations);
-        else
-            sys->jacobi_par(iterations);
-        std::vector<long double> xvals = sys->getXVals();
-        std::cout << "COMPUTED X VALS:" << std::endl;
-        for(int i = 0; i < xvals.size(); i++){
-            std::cout << "x_" << i << " = " << xvals[i] << std::endl;
-        }
-    }
-    else if (type == COMPLEX){
-        //LinEqSystem<std::complex<long double>> * sys = LinEqSystem<std::complex<long double>>::fromFile(argv[1],&LinEqUtils::complex_parser,);
-        //sys->jacobi_seq(iterations);
-    }
-    
-    //PARSE FILE
-    //
 
     return 0;
 }
