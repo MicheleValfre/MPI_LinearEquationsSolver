@@ -1,33 +1,36 @@
 #ifndef JACOBI_H
 #define JACOBI_H
 
-#include <vector>
-#include <exception>
+#include <stdio.h>
 
-namespace jacobi_utils{
-    typedef enum{sequential, parallel} algo_t; 
-};
 
-class LinearEquationsSystem{
-    private:
-        std::vector<long double> a;
-        std::vector<long double> b;
-        std::vector<long double> x;
-        int rows;
-        int cols;
-        void jacobi_seq(int iterations);
-        void jacobi_par(int iterations);
-        void init_x();
-        long double compute_sum(int i, std::vector<long double> old_x);
+typedef enum {
+    ERROR_INPUT_FILE_COL_COUNT,
+    ERROR_INPUT_FILE_NOT_SQUARE,
+    ERROR_INPUT_FILE_INVALID_VALUE,
+    GET_ERRNO,
+    NO_ERROR
+} les_error_t; 
 
-    public:
-        LinearEquationsSystem(std::string fpath);
-        std::string toString();
-        void jacobi(int iterations, jacobi_utils::algo_t type);
-        long double aAt(int row, int col);
-        long double bAt(int row);
-        long double xAt(int col);
-        std::vector<long double> getX();
-};
+extern les_error_t les_error;
+
+char * les_strerror(les_error_t error);
+
+typedef enum {
+    SEQUENTIAL,
+    PARALLEL
+} algo_t;
+
+typedef struct _lin_sys{
+    long double * a;
+    long double * b;
+    long double * x;
+    int rows;
+    int cols;
+} linear_equation_system;
+
+linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * file);
+void jacobi(linear_equation_system * lin_sys, algo_t algo_type, int iterations);
+void print_x(linear_equation_system l_sys);
 
 #endif

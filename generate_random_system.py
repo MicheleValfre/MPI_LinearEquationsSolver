@@ -1,3 +1,4 @@
+#GENERATES A RANDOM DIAGONALLY DOMINANT MATRIX AND THE b VECTOR
 import random
 import sys
 
@@ -33,9 +34,9 @@ for i in range(0,rows):
     assert abs(matrix[i][i]) >= summation
 
 #ADD b
+b = []
 for i in range(0,rows):
-    b = random.uniform(l_bound,u_bound)
-    matrix[i].append(b) 
+    b.append(random.uniform(l_bound,u_bound))
 
 #WRITE
 file = open(fname,"w+")
@@ -43,8 +44,9 @@ file = open(fname,"w+")
 for i in range(0,rows):
     for j in range(0,cols):
         file.write(str(matrix[i][j]))
-        if j < cols - 1:
-            file.write(',')
+        #if j < cols - 1:
+        file.write(',')
+    file.write(str(b[i]))
     file.write('\n')
 
 file.close()

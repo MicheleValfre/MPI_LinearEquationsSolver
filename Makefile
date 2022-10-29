@@ -1,14 +1,14 @@
-CXX := mpic++
+CC := mpicc
 FLAGS := -g -Wall -lm
 BUILD_DIR := ./build
 SRC_DIR := ./src
 INCLUDES := -I./src
 
-solver : $(BUILD_DIR)/main.o $(BUILD_DIR)/jacobi.o 
-	$(CXX) $(FLAGS) -o $@ $^ 
+solver : $(BUILD_DIR)/main.o $(BUILD_DIR)/jacobi.o
+	$(CC) $(FLAGS) -o $@ $^ 
 
 clean:
 	rm -r ./solver ./build/
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp 
-	$(CXX) $(FLAGS) $(INCLUDES) -c -o $@ $<
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c 
+	$(CC) $(FLAGS) $(INCLUDES) -c -o $@ $<
