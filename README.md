@@ -2,7 +2,10 @@
 The following is a linear equations system solver developed for a university project. Both the sequential and parallel versions of the code are included.
 
 ## Build
+In order to build both the solver and the test suite, run the followings:
 ```
+git submodules init
+git submodules update 
 mkdir build
 make
 ```
