@@ -101,6 +101,12 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
                     les_error = ERROR_INPUT_FILE_NOT_SQUARE;
                     return NULL;
                 }
+
+                new_val = strtold(buf,NULL);
+                if (errno) {
+                    les_error = GET_ERRNO;
+                    return NULL;
+                }
                 
 
                 b_allocated++;
@@ -145,9 +151,9 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
     if (les_error != NO_ERROR)
         return NULL;
 
-    for (int i = 0; i < lin_sys->cols; i++){
+    /*for (int i = 0; i < lin_sys->cols; i++){
         printf("%Lf\n",lin_sys->x[i]);
-    }
+    }*/
 
     return lin_sys;
 }
@@ -162,7 +168,36 @@ long double jacobi_aux_sum(linear_equation_system * lin_sys, long double * old_x
 }
 
 
+void jacobi_par(linear_equation_system * lin_sys, int iterations){
+    printf("JACOBI PAR: TODO\n");
+}
+
+void jacobi_seq(linear_equation_system * lin_sys, int iterations){
+
+    while (iterations > 0) {
+        for (int i = 0; i < lin_sys->cols; i++) {
+            long double sum = 0.0;
+            for (int j = 0; j < lin_sys->cols; j++){
+                if (j != i) {
+                    sum += lin_sys->a[i * lin_sys->cols + j] * lin_sys->x[j];
+                }
+            }
+            lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i] * 
+                             (lin_sys->b[i] - sum));
+        }
+        iterations--;
+    }
+
+}
+
 void jacobi(linear_equation_system * lin_sys, algo_t algo_type, int iterations){
+    if (algo_type == SEQUENTIAL)
+        jacobi_seq(lin_sys,iterations);
+    else
+        jacobi_par(lin_sys,iterations);
+}
+
+void jacobiBAK(linear_equation_system * lin_sys, algo_t algo_type, int iterations){
     
     long double * old_x;
 

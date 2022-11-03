@@ -1,0 +1,64 @@
+\documentclass[twocolumn]{article}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+
+\title{Relazione Progetto SCPD}
+\date{Ottobre 2022}
+\author{Michele Valfrè}
+\begin{document}
+	\maketitle
+	\section{Introduzione: Metodo di Jacobi}
+	Il metodo di Jacobi è un metodo iterativo per la soluzione di sistemi di equazioni lineari nella forma $Ax=b$ tali che $A$ sia diagonalmente dominante, ovvero
+	\begin{equation}\label{f1}
+		\forall i,\ |a_{ii}| >= \sum_{j \neq i} |a_{ij}| 
+	\end{equation}
+	
+	Il passo $k$-esimo dell' iterazione è descritto dall' equazione
+	\begin{equation}\label{f2}
+		x^{k}_i = \frac{1}{a_{i,i}}[b_i  - \sum_{j\neq i}a_{i,j}x^{k-1}_j].
+	\end{equation}
+	La complessità del metodo di Jacobi dipende dal numero di iterazioni e dalla precisione richiesta.
+	%TODO aggiungere altre info(convergenza, etc...)
+	\section{Algoritmo Sequenziale}
+	Nell' implementazione sequenziale, si è scelto di utilizzare la seguente classe:
+	\lstinputlisting[language=C++,
+						  emph={int,char,double,float,unsigned,long},
+						  emphstyle={\color{blue}},
+						  basicstyle=\ttfamily\scriptsize,
+						  columns=fullflexible,
+						  linerange={11-17}]
+						  {"../src/jacobi.h"}
+	
+	l' algoritmo utilizzato itera sul vettore $system.x$ delle variabili, per il numero di iterazioni specificate, ed applica ad ognuna delle componenti la formula \eqref{f2}:
+	
+	\begin{algorithm}
+		\footnotesize
+		\caption{Jacobi Sequenziale}
+		\begin{algorithmic}[1]
+			\Function{JACOBI\_SEQ}{system,iterations}
+				\State $old\_x \gets system.x$
+				\While{$iterations > 0$}
+				\State $i \gets 0$
+				\While{$i < system.cols$}
+				\State $sum \gets \sum_{j\neq i} system.A[i] - old\_x[j]$%COMPUTE\_SUM(system,i,old\_x)$
+				\State $old\_x[i] \gets system.x[i]$
+				\State $system.x[i] \gets \frac{1}{system.A[i][i]}(system.b[i] - sum)$
+				\State $i \gets i + 1$
+				\EndWhile
+				\State $iterations \gets iterations - 1$
+				\EndWhile
+			\EndFunction
+		\end{algorithmic}
+	\end{algorithm}
+	\pagebreak
+	Il programma riceve tre parametri: tipo di algoritmo(S o P), numero di iterazioni e un file contenente la definizione del sistema in formato csv nel quale l'ultima colonna è considerata come il vettore $b$. Una volta parsato il file, il vettore $x$ viene inizializzato a $0.0$ e, a seconda del tipo di algoritmo specificato, il programma decide se invocare il metodo $jacobi\_seq(...)$ o $jacobi\_par(...)$.
+	\section{Algoritmo Parallelo}
+	
+	\section{Sperimentazione}
+	
+\end{document}

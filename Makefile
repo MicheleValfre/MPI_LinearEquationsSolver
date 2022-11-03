@@ -13,7 +13,7 @@ all :
 solver : $(BUILD_DIR)/main.o $(BUILD_DIR)/jacobi.o
 	$(CC) $(FLAGS) -o $@ $^ 
 
-test_suite : $(BUILD_DIR)/unity.unity.o
+test_suite : $(BUILD_DIR)/unity.unity.o $(BUILD_DIR)/jacobi.o
 	$(CC) $(FLAGS) $(INCLUDES) -o $@ $^ $(TEST_DIR)/test.c
 
 clean:
