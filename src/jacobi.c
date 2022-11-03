@@ -158,14 +158,6 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
     return lin_sys;
 }
 
-long double jacobi_aux_sum(linear_equation_system * lin_sys, long double * old_x, int i){
-    long double sum = 0.0;
-    for (int j = 0; j < lin_sys->cols ; j++){
-        if (j != i)
-            sum += lin_sys->a[i] - old_x[j];
-    }
-    return sum;
-}
 
 
 void jacobi_par(linear_equation_system * lin_sys, int iterations){
@@ -197,24 +189,6 @@ void jacobi(linear_equation_system * lin_sys, algo_t algo_type, int iterations){
         jacobi_par(lin_sys,iterations);
 }
 
-void jacobiBAK(linear_equation_system * lin_sys, algo_t algo_type, int iterations){
-    
-    long double * old_x;
-
-    for (int i = 0; i < lin_sys->cols; i++)
-        lin_sys->x[i] = 0;
-
-    initArray(&old_x,lin_sys->cols,lin_sys->x);
-
-    while (iterations > 0){
-        for (int i = 0; i < lin_sys->cols; i++){
-            long double sum = jacobi_aux_sum(lin_sys,old_x,i);
-            old_x[i] = lin_sys->x[i];
-            lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i]) * (lin_sys->b[i] - sum);
-        }
-        iterations--;
-    }
-}
 
 void print_x(linear_equation_system l_sys){
     for (int i = 0; i < l_sys.cols; i++){
