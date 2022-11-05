@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef PARALLEL
+#include <mpi.h>
+#endif
+
 #include "jacobi.h"
 
 les_error_t les_error = NO_ERROR;
@@ -160,11 +164,30 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 
 
 
-void jacobi_par(linear_equation_system * lin_sys, int iterations){
-    printf("JACOBI PAR: TODO\n");
+//V1
+
+#ifdef PARALLEL
+void jacobi(linear_equation_system * lin_sys, int iterations){
+
+    printf("PARALLEL");
+    int rank, n_procs;
+    long double * old_x;
+
+    MPI_Init(NULL,NULL);
+
+    //initArray(&old_x,lin_sys->cols,NULL);
+
+    MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+    //TODO provare divide et impera
+    //free(old_x);
+    
+    MPI_Finalize();
 }
 
-void jacobi_seq(linear_equation_system * lin_sys, int iterations){
+#else
+void jacobi(linear_equation_system * lin_sys, int iterations){
 
     while (iterations > 0) {
         for (int i = 0; i < lin_sys->cols; i++) {
@@ -181,13 +204,7 @@ void jacobi_seq(linear_equation_system * lin_sys, int iterations){
     }
 
 }
-
-void jacobi(linear_equation_system * lin_sys, algo_t algo_type, int iterations){
-    if (algo_type == SEQUENTIAL)
-        jacobi_seq(lin_sys,iterations);
-    else
-        jacobi_par(lin_sys,iterations);
-}
+#endif
 
 
 void print_x(linear_equation_system l_sys){

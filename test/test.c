@@ -51,7 +51,7 @@ int check_results(linear_equation_system lin_sys){
     return 1;
 }
 
-void test_jacobi_seq(void) {
+void test_jacobi(void) {
     FILE * file;
     linear_equation_system lin_sys;
     file = fopen("examples/test.csv","r");
@@ -60,21 +60,7 @@ void test_jacobi_seq(void) {
 
     fclose(file);
 
-    jacobi(&lin_sys,SEQUENTIAL,20);
-
-    TEST_ASSERT_TRUE(check_results(lin_sys));
-}
-
-void test_jacobi_par(void) {
-    FILE * file;
-    linear_equation_system lin_sys;
-    file = fopen("examples/test.csv","r");
-
-    TEST_ASSERT_TRUE(load_from_file(&lin_sys,file) != NULL);
-
-    fclose(file);
-
-    jacobi(&lin_sys,PARALLEL,20);
+    jacobi(&lin_sys,20);
 
     TEST_ASSERT_TRUE(check_results(lin_sys));
 }
@@ -82,7 +68,6 @@ void test_jacobi_par(void) {
 // not needed when using generate_test_runner.rb
 int main(void) {
     UNITY_BEGIN();
-    RUN_TEST(test_jacobi_seq);
-    RUN_TEST(test_jacobi_par);
+    RUN_TEST(test_jacobi);
     return UNITY_END();
 }

@@ -6,11 +6,7 @@
 #include "jacobi.h"
 
 void print_usage(){
-    #ifdef PARALLEL
     printf("\nusage:\n\n  ./solver_parallel {filename} {number of iterations}\n\nwhere:\n\n");
-    #else
-    printf("\nusage:\n\n  ./solver_sequential {filename} {number of iterations}\n\nwhere:\n\n");
-    #endif
 }
 
 void parse_args(int argc, char ** argv, char ** filename, int * iterations){
@@ -55,15 +51,4 @@ int main(int argc, char ** argv){
     } 
 
     fclose(file);
-
-    jacobi(&lin_sys,iterations);
-
-    if (errno) {
-        printf("Error: %s\n",strerror(errno));
-        return 0;
-    }
-    
-    print_x(lin_sys);
-
-    return 0;
 }
