@@ -4,8 +4,8 @@ The following is a linear equations system solver developed for a university pro
 ## Build
 In order to build both the solver and the test suite, run the followings:
 ```
-git submodules init
-git submodules update 
+git submodule init
+git submodule update 
 mkdir build
 make
 ```
