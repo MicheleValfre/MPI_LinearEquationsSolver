@@ -17,11 +17,24 @@ les_error_t les_error = NO_ERROR;
 /*"private" function. Initializes the given array to vals or, if vals
   is NULL, 0.0*/
 void initArray(long double * * array, int len, long double * vals){
-    for (int i = 0; i < len; i++){
-        if (!(*array))
-            *array = malloc(sizeof(long double));
+    
+    *array = malloc(sizeof(long double));
+    if (!(*array)){
+        les_error = GET_ERRNO;
+        return;
+    }
+
+    if (vals != NULL)
+            (*array)[0] = vals[0];
         else
-            *array = realloc(*array,sizeof(long double) * (i+1));
+            (*array)[0] = 0.0;
+
+
+    for (int i = 1; i < len; i++){
+        //if (!(*array))
+            //*array = malloc(sizeof(long double));
+        //else
+        *array = realloc(*array,sizeof(long double) * (i+1));
         if (!(*array)){
             les_error = GET_ERRNO;
             return;
@@ -155,50 +168,100 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
     if (les_error != NO_ERROR)
         return NULL;
 
-    /*for (int i = 0; i < lin_sys->cols; i++){
-        printf("%Lf\n",lin_sys->x[i]);
-    }*/
 
     return lin_sys;
 }
 
 
 
-//V1
 
 #ifdef PARALLEL
 void jacobi(linear_equation_system * lin_sys, int iterations){
+    int rank, n_procs, n_vars, x_offset;
+    long double *local_a, *local_b, *local_x, *old_x;
 
-    printf("PARALLEL");
-    int rank, n_procs;
-    long double * old_x;
-
-    MPI_Init(NULL,NULL);
-
-    //initArray(&old_x,lin_sys->cols,NULL);
-
+    
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
-    //TODO provare divide et impera
-    //free(old_x);
-    
-    MPI_Finalize();
+    if (rank == 0)
+        lin_sys->rows = lin_sys->rows / n_procs;
+
+    MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    MPI_Bcast(&lin_sys->cols,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    MPI_Bcast(&iterations,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+
+    if (rank != 0){
+        initArray(&lin_sys->a,lin_sys->rows * lin_sys->cols,NULL);
+        initArray(&lin_sys->b,lin_sys->rows,NULL);
+    }
+    initArray(&lin_sys->x,lin_sys->cols,NULL);
+    initArray(&old_x,lin_sys->cols,NULL);
+
+    MPI_Scatter(lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
+                lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
+                0,MPI_COMM_WORLD);
+
+    MPI_Scatter(lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
+                lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
+                0,MPI_COMM_WORLD);
+
+
+    while (iterations > 0){
+        MPI_Bcast(lin_sys->x,lin_sys->cols,MPI_LONG_DOUBLE,0,MPI_COMM_WORLD);
+
+        for(int i = 0; i < lin_sys->cols; i++)
+            old_x[i] = lin_sys->x[i];
+
+        for (int i = 0; i < lin_sys->rows; i++){
+            long double sum = 0.0;
+            for (int j = 0; j < lin_sys->cols; j++){
+                if (i + rank * lin_sys->rows != j)
+                    sum += lin_sys->a[i*lin_sys->cols + j] * old_x[j];
+            }
+
+            lin_sys->x[i+rank*lin_sys->rows] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+            //if (rank == 1 && i == 0)
+            //    printf("%Lf | %Lf\n | %Lf\n",lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)],lin_sys->b[i] , sum);
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Gather(lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
+                   lin_sys->x, lin_sys->rows,MPI_LONG_DOUBLE,
+                   0,MPI_COMM_WORLD);
+
+        iterations--;
+    }
+
+    if (rank != 0){
+        free(lin_sys->a);
+        free(lin_sys->b);
+        free(lin_sys->x);
+    }
+    free(old_x);
 }
+
 
 #else
 void jacobi(linear_equation_system * lin_sys, int iterations){
 
+    long double * old_x;
+    initArray(&old_x,lin_sys->cols,NULL);
+    
     while (iterations > 0) {
+        for(int i = 0; i < lin_sys->cols; i++)
+            old_x[i] = lin_sys->x[i];
         for (int i = 0; i < lin_sys->cols; i++) {
             long double sum = 0.0;
             for (int j = 0; j < lin_sys->cols; j++){
-                if (j != i) {
-                    sum += lin_sys->a[i * lin_sys->cols + j] * lin_sys->x[j];
-                }
+                if (j != i) 
+                    sum += lin_sys->a[i * lin_sys->cols + j] * old_x[j];
             }
             lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i] * 
                              (lin_sys->b[i] - sum));
+            //if (i == 25)
+            //    printf("%Lf | %Lf | %Lf\n",lin_sys->a[i + lin_sys->cols * i],lin_sys->b[i], sum);
+            
         }
         iterations--;
     }

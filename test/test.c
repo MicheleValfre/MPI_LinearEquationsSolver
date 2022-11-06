@@ -60,7 +60,7 @@ void test_jacobi(void) {
 
     fclose(file);
 
-    jacobi(&lin_sys,20);
+    jacobi(&lin_sys,50);
 
     TEST_ASSERT_TRUE(check_results(lin_sys));
 }

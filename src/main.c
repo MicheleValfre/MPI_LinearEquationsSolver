@@ -3,6 +3,10 @@
 #include <errno.h>
 #include <string.h>
 
+#ifdef PARALLEL
+#include <mpi.h>
+#endif
+
 #include "jacobi.h"
 
 void print_usage(){
@@ -35,6 +39,14 @@ int main(int argc, char ** argv){
     FILE * file;
     linear_equation_system lin_sys;
 
+
+    #ifdef PARALLEL
+    int rank;
+    MPI_Init(&argc,&argv);
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    if (rank == 0) {
+    #endif
+
     if (argc != 3){
         print_usage();
         return 0;
@@ -56,14 +68,29 @@ int main(int argc, char ** argv){
 
     fclose(file);
 
+    #ifdef PARALLEL
+    }
+    #endif
     jacobi(&lin_sys,iterations);
+    
+    
+    #ifdef PARALLEL
+    if (rank == 0) {
+    #endif
 
     if (errno) {
         printf("Error: %s\n",strerror(errno));
         return 0;
     }
-    
     print_x(lin_sys);
+
+    #ifdef PARALLEL
+    }
+    #endif
+
+    #ifdef PARALLEL
+    MPI_Finalize();
+    #endif
 
     return 0;
 }
