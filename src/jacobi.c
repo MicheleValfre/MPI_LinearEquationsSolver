@@ -15,8 +15,40 @@ int matrix_size = 0;
 
 
 
-/*"private" function. Initializes the given array to vals or, if vals
+/*"private" functions. Initializes the given array to vals or, if vals
   is NULL, 0.0*/
+void initArray_Int(int * * array, int len, int * vals){
+    
+    *array = malloc(sizeof(int));
+    if (!(*array)){
+        les_error = GET_ERRNO;
+        return;
+    }
+
+    if (vals != NULL)
+            (*array)[0] = vals[0];
+        else
+            (*array)[0] = 0.0;
+
+
+    for (int i = 1; i < len; i++){
+        //if (!(*array))
+            //*array = malloc(sizeof(long double));
+        //else
+        *array = realloc(*array,sizeof(int) * (i+1));
+        if (!(*array)){
+            les_error = GET_ERRNO;
+            return;
+        }
+
+        if (vals != NULL)
+            (*array)[i] = vals[i];
+        else
+            (*array)[i] = 0;
+    }
+}
+
+
 void initArray(long double * * array, int len, long double * vals){
     
     *array = malloc(sizeof(long double));
@@ -178,19 +210,31 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 
 #ifdef PARALLEL
 void jacobi(linear_equation_system * lin_sys, int iterations){
-    int rank, n_procs, overflow;
+    int rank, n_procs, proc_cntr;
+    int * sendcounts;
     long double *old_x;
 
     
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
+    sendcounts = NULL;
     if (rank == 0){
-        overflow = lin_sys->rows % n_procs;
-        lin_sys->rows = lin_sys->rows / n_procs;
+        initArray_Int(&sendcounts,n_procs,NULL);
+        proc_cntr = 0;
+        for(int i = 0; i < lin_sys->rows; i++){
+            sendcounts[proc_cntr++]++;
+            if (proc_cntr == n_procs)
+                proc_cntr = 0;
+        }
+        for(int i = 0; i < n_procs; i++)
+            printf("%d\n",sendcounts[i]);
+        printf("---\n");
     }
 
-    MPI_Bcast(&overflow,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    if (rank == 0)
+        lin_sys->rows = lin_sys->rows / n_procs;
+
     MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&lin_sys->cols,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&iterations,1,MPI_INTEGER,0,MPI_COMM_WORLD);
