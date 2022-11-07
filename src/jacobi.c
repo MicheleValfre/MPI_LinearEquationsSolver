@@ -251,7 +251,7 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     while (iterations > 0) {
         for(int i = 0; i < lin_sys->cols; i++)
             old_x[i] = lin_sys->x[i];
-        for (int i = 0; i < lin_sys->cols; i++) {
+        for (int i = 0; i < lin_sys->rows; i++) {
             long double sum = 0.0;
             for (int j = 0; j < lin_sys->cols; j++){
                 if (j != i) 

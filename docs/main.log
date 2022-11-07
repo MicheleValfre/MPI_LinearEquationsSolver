@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Arch Linux) (preloaded format=pdflatex 2022.4.29)  29 OCT 2022 23:34
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Arch Linux) (preloaded format=pdflatex 2022.4.29)  7 NOV 2022 12:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -204,19 +204,21 @@ File: lstmisc.sty 2020/03/24 1.8d (Carsten Heinz)
 ) (../src/jacobi.h
 consecutive:
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <7> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 15.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 20.
 ) [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
+] [2
+
 ] (./main.aux) ) 
 Here is how much of TeX's memory you used:
- 4252 strings out of 478238
- 61386 string characters out of 5850456
- 552707 words of memory out of 5000000
- 22478 multiletter control sequences out of 15000+600000
- 475281 words of font info for 50 fonts, out of 8000000 for 9000
+ 4264 strings out of 478238
+ 61451 string characters out of 5850456
+ 557116 words of memory out of 5000000
+ 22489 multiletter control sequences out of 15000+600000
+ 475934 words of font info for 52 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 54i,9n,64p,439b,1354s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 54i,9n,64p,510b,1350s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pf
 b></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/
 texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/share/texmf-dist/font
@@ -234,11 +236,12 @@ amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy
 10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/sh
 are/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmtt8.pfb>
-Output written on main.pdf (1 page, 212624 bytes).
+lic/amsfonts/cm/cmti10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmtt8.pfb>
+Output written on main.pdf (2 pages, 230510 bytes).
 PDF statistics:
- 113 PDF objects out of 1000 (max. 8388607)
- 67 compressed objects within 1 object stream
+ 121 PDF objects out of 1000 (max. 8388607)
+ 72 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

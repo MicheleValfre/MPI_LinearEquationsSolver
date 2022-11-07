@@ -25,28 +25,18 @@
 	La complessità del metodo di Jacobi dipende dal numero di iterazioni e dalla precisione richiesta.
 	%TODO aggiungere altre info(convergenza, etc...)
 	\section{Algoritmo Sequenziale}
-	Nell' implementazione sequenziale, si è scelto di utilizzare la seguente classe:
-	\lstinputlisting[language=C++,
-						  emph={int,char,double,float,unsigned,long},
-						  emphstyle={\color{blue}},
-						  basicstyle=\ttfamily\scriptsize,
-						  columns=fullflexible,
-						  linerange={11-17}]
-						  {"../src/jacobi.h"}
-	
-	l' algoritmo utilizzato itera sul vettore $system.x$ delle variabili, per il numero di iterazioni specificate, ed applica ad ognuna delle componenti la formula \eqref{f2}:
+	L' algoritmo, preso un sistema di equazioni lineari $system$ dotato di attributi $A$, $b$, $x$, $rows$ e $cols$, ad ogni iterazione, scorre le righe della matrice $system.A$  ed applica l' equazione \eqref{f2}:
 	
 	\begin{algorithm}
 		\footnotesize
 		\caption{Jacobi Sequenziale}
 		\begin{algorithmic}[1]
-			\Function{JACOBI\_SEQ}{system,iterations}
-				\State $old\_x \gets system.x$
+			\Function{JACOBI\_SEQ}{$system$,$iterations$}
 				\While{$iterations > 0$}
+				\State $old\_x \gets system.x$
 				\State $i \gets 0$
-				\While{$i < system.cols$}
+				\While{$i < system.rows$}
 				\State $sum \gets \sum_{j\neq i} system.A[i] - old\_x[j]$%COMPUTE\_SUM(system,i,old\_x)$
-				\State $old\_x[i] \gets system.x[i]$
 				\State $system.x[i] \gets \frac{1}{system.A[i][i]}(system.b[i] - sum)$
 				\State $i \gets i + 1$
 				\EndWhile
@@ -56,8 +46,34 @@
 		\end{algorithmic}
 	\end{algorithm}
 	\pagebreak
-	Il programma riceve tre parametri: tipo di algoritmo(S o P), numero di iterazioni e un file contenente la definizione del sistema in formato csv nel quale l'ultima colonna è considerata come il vettore $b$. Una volta parsato il file, il vettore $x$ viene inizializzato a $0.0$ e, a seconda del tipo di algoritmo specificato, il programma decide se invocare il metodo $jacobi\_seq(...)$ o $jacobi\_par(...)$.
+
+	
+	Nell' implementazione sequenziale, si è scelto di utilizzare la seguente classe:
+	\lstinputlisting[language=C++,
+	emph={int,char,double,float,unsigned,long},
+	emphstyle={\color{blue}},
+	basicstyle=\ttfamily\scriptsize,
+	columns=fullflexible,
+	linerange={20-26}]
+	{"../src/jacobi.h"}
+	Come si può notare, sono mantenuti sia il numero di righe che il numero di colonne di $A$. Si tratta di un' informazione ridondante nel caso dell' implementazione sequenziale(una delle precondizioni è che $A$ sia quadrata), tuttavia, tornerà utile nell' implementazione parallela dove, nel caso generale, le singole UC non opereranno su matrici quadrate.
+	
 	\section{Algoritmo Parallelo}
+	Siccome, entro la medesima iterazione, non vi sono dipendenze fra le operazioni, il metodo di Jacobi è  una computazione di tipo \textit{embarassingly parallel}: il problema può essere scomposto in più parti che non sono legate da una relazione di dipendenza. In particolare, definendo $P_i$ il processo con $rank = i$, l' implementazione parallela è riassunta dai seguenti punti:
+	\subsection{Caso 1: il numero di processi divide esattamente il numero di righe}
+	\begin{enumerate}
+		\item $P_0$ distribuisce fra se stesso e gli altri processi la matrice $A$ e il vettore $b$. Dunque, il processo $P_i$ avrà una matrice $A_i$ di dimensione $\frac{numero\_righe}{numero\_processi} \times numero\_colonne$ contenente le righe comprese fra  l' $i$-esima e la $(i + \frac{numero\_righe}{numero\_processi})$-esima e i relativi valori di $b$;
+		\item $P_0$ distribuisce ad ogni processo una copia del vettore $x$ tramite una $Bcast$;
+		\item ogni processo applica l' equazione \eqref{f2} solo alle proprie variabili(il processo $P_i$ modificherà le variabili comprese fra $x[i]$ e $x[i + \frac{numero\_righe}{numero\_processi}]$ ma avrà bisogno anche delle altre per eseguire la sommatoria).
+		\item i risultati vengono raccolti nel vettore $x$ di $P_0$ con una $Gather$(ogni processo contribuirà solo con la porzione di vettore di propria competenza);
+		\item ritorna a (2).
+	\end{enumerate}
+   \subsection{Caso 2: il numero di processi non divide esattamente il numero di righe}
+   TODO
+   
+	% In particolare, ad ogni UC viene assegnata una porzione di matrice(attraverso $Scatter$) di dimensione $\frac{system.rows}{numero\_processi} \times system.cols$ sulla cui righe sarà applicata l' equazione \eqref{f2} ad ogni iterazione. I risultati saranno raccolti($Gather$) alla fine di ogni iterazione e il nuovo vettore $system.x$ sarà distribuito per quella successiva tramite $Bcast$ dal momento che ogni UC necessita dell' intero vettore e non della sola parte sulla quale dovrà operare.
+	% Come già accennato nella sezione precedente, le sottomatrici assegnate ad ogni UC non saranno quadrate.\\
+	%L' algoritmo può essere riassunto dai seguenti passi:
 	
 	\section{Sperimentazione}
 	
