@@ -1,6 +1,6 @@
 MPICC := mpicc
 MPI_DEFINES := -DPARALLEL
-FLAGS := -g -Wall -lm
+FLAGS := -g -Wall -lm -std=c99
 BUILD_DIR := ./build
 UNITY_DIR := ./Unity/src
 TEST_DIR := ./test
