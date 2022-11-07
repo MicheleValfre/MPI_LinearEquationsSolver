@@ -213,6 +213,7 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     int rank, n_procs, proc_cntr;
     int * sendcounts;
     long double *old_x;
+    MPI_Status status;
 
     
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
@@ -227,17 +228,28 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
             if (proc_cntr == n_procs)
                 proc_cntr = 0;
         }
-        for(int i = 0; i < n_procs; i++)
-            printf("%d\n",sendcounts[i]);
-        printf("---\n");
     }
 
     if (rank == 0)
         lin_sys->rows = lin_sys->rows / n_procs;
 
-    MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    //MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    if (rank == 0) {
+        for(int i = 1; i < n_procs; i++){
+            MPI_Send(sendcounts+i,1,MPI_INTEGER,i,0,MPI_COMM_WORLD);
+        }
+        lin_sys->rows = sendcounts[0];
+    }
+    else {
+        MPI_Recv(&lin_sys->rows,1,MPI_INTEGER,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+    }
+
+    printf("%d: %d\n",rank,lin_sys->rows);
     MPI_Bcast(&lin_sys->cols,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&iterations,1,MPI_INTEGER,0,MPI_COMM_WORLD);
+    MPI_Finalize();
+    exit(0);
+    
 
     if (rank != 0){
         initArray(&lin_sys->a,lin_sys->rows * lin_sys->cols,NULL);
