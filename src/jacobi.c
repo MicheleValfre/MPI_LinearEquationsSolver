@@ -177,8 +177,8 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 
 #ifdef PARALLEL
 void jacobi(linear_equation_system * lin_sys, int iterations){
-    int rank, n_procs, n_vars, x_offset;
-    long double *local_a, *local_b, *local_x, *old_x;
+    int rank, n_procs;
+    long double *old_x;
 
     
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
@@ -199,11 +199,11 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     initArray(&old_x,lin_sys->cols,NULL);
 
     MPI_Scatter(lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
-                lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
+                (rank == 0) ? MPI_IN_PLACE : lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
                 0,MPI_COMM_WORLD);
 
     MPI_Scatter(lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
-                lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
+                (rank == 0) ? MPI_IN_PLACE : lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
                 0,MPI_COMM_WORLD);
 
 
@@ -226,7 +226,7 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Gather(lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
+        MPI_Gather((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
                    lin_sys->x, lin_sys->rows,MPI_LONG_DOUBLE,
                    0,MPI_COMM_WORLD);
 
