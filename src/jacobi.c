@@ -11,6 +11,7 @@
 #include "jacobi.h"
 
 les_error_t les_error = NO_ERROR;
+int matrix_size = 0;
 
 
 
@@ -177,16 +178,19 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 
 #ifdef PARALLEL
 void jacobi(linear_equation_system * lin_sys, int iterations){
-    int rank, n_procs;
+    int rank, n_procs, overflow;
     long double *old_x;
 
     
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
-    if (rank == 0)
+    if (rank == 0){
+        overflow = lin_sys->rows % n_procs;
         lin_sys->rows = lin_sys->rows / n_procs;
+    }
 
+    MPI_Bcast(&overflow,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&lin_sys->cols,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&iterations,1,MPI_INTEGER,0,MPI_COMM_WORLD);

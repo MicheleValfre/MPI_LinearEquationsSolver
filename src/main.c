@@ -71,6 +71,8 @@ int main(int argc, char ** argv){
     #ifdef PARALLEL
     }
     #endif
+    errno = 0;
+    les_error = NO_ERROR;
     jacobi(&lin_sys,iterations);
     
     
@@ -79,7 +81,17 @@ int main(int argc, char ** argv){
     #endif
 
     if (errno) {
+        #ifdef PARALLEL
+        MPI_Finalize();
+        #endif
         printf("Error: %s\n",strerror(errno));
+        return 0;
+    }
+    else if (les_error != NO_ERROR) {
+        #ifdef PARALLEL
+        MPI_Finalize();
+        #endif
+        printf("Error: %s\n",les_strerror(les_error));
         return 0;
     }
     print_x(lin_sys);
