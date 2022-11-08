@@ -236,8 +236,8 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
         a_displs[0] = 0;
         b_displs[0] = 0;
         for(int i = 1; i < n_procs; i++){
-            a_displs[i] = a_displs[i-1] + row_counts[i] * lin_sys->cols;
-            b_displs[i] = a_displs[i-1] + row_counts[i];
+            a_displs[i] = a_displs[i-1] + row_counts[i-1] * lin_sys->cols;
+            b_displs[i] = b_displs[i-1] + row_counts[i-1];
         }
     }
 
