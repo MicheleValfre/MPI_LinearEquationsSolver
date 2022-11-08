@@ -210,8 +210,8 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 
 #ifdef PARALLEL
 void jacobi(linear_equation_system * lin_sys, int iterations){
-    int rank, n_procs, proc_cntr;
-    int * sendcounts;
+    int rank, n_procs, proc_cntr, x_offset;
+    int *row_counts, *a_displs, *b_displs;
     long double *old_x;
     MPI_Status status;
 
@@ -219,14 +219,25 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
-    sendcounts = NULL;
+    row_counts = NULL;
+    a_displs = NULL;
     if (rank == 0){
-        initArray_Int(&sendcounts,n_procs,NULL);
+        //row_counts
+        initArray_Int(&row_counts,n_procs,NULL);
         proc_cntr = 0;
         for(int i = 0; i < lin_sys->rows; i++){
-            sendcounts[proc_cntr++]++;
+            row_counts[proc_cntr++]++;
             if (proc_cntr == n_procs)
                 proc_cntr = 0;
+        }
+        //displs
+        initArray(&a_displs,n_procs,NULL);
+        initArray(&b_displs,n_procs,NULL);
+        a_displs[0] = 0;
+        b_displs[0] = 0;
+        for(int i = 1; i < n_procs; i++){
+            a_displs[i] = a_displs[i-1] + row_counts[i] * lin_sys->cols;
+            b_displs[i] = a_displs[i-1] + row_counts[i];
         }
     }
 
@@ -236,19 +247,22 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     //MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     if (rank == 0) {
         for(int i = 1; i < n_procs; i++){
-            MPI_Send(sendcounts+i,1,MPI_INTEGER,i,0,MPI_COMM_WORLD);
+            MPI_Send(row_counts+i,1,MPI_INTEGER,i,0,MPI_COMM_WORLD);
+
+            /*displ of vector b should be equal to displ of vector x*/
+            MPI_Send(b_displs+i,1,MPI_INTEGER,i,0,MPI_COMM_WORLD);
         }
-        lin_sys->rows = sendcounts[0];
+        lin_sys->rows = row_counts[0];
+        x_offset = 0;
     }
     else {
         MPI_Recv(&lin_sys->rows,1,MPI_INTEGER,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+        MPI_Recv(&x_offset,1,MPI_INTEGER,0,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
     }
 
-    printf("%d: %d\n",rank,lin_sys->rows);
+
     MPI_Bcast(&lin_sys->cols,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     MPI_Bcast(&iterations,1,MPI_INTEGER,0,MPI_COMM_WORLD);
-    MPI_Finalize();
-    exit(0);
     
 
     if (rank != 0){
@@ -258,13 +272,35 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     initArray(&lin_sys->x,lin_sys->cols,NULL);
     initArray(&old_x,lin_sys->cols,NULL);
 
-    MPI_Scatter(lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
+    
+    MPI_Scatterv(lin_sys->b,row_counts,b_displs,MPI_LONG_DOUBLE,
+                (rank == 0) ? MPI_IN_PLACE : lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
+                0,MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        for(int i = 0; i < n_procs; i++)
+            row_counts[i] *= lin_sys->cols;
+    }
+    
+
+    MPI_Scatterv(lin_sys->a,row_counts,a_displs,MPI_LONG_DOUBLE,
                 (rank == 0) ? MPI_IN_PLACE : lin_sys->a,lin_sys->rows*lin_sys->cols,MPI_LONG_DOUBLE,
                 0,MPI_COMM_WORLD);
 
-    MPI_Scatter(lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
-                (rank == 0) ? MPI_IN_PLACE : lin_sys->b,lin_sys->rows,MPI_LONG_DOUBLE,
-                0,MPI_COMM_WORLD);
+
+    if (rank == 0){
+        for (int i = 0; i < n_procs; i++)
+            row_counts[i] /= lin_sys->cols;
+    }
+    
+    //TODO provare su paradigm con numero dispari di processi
+    /*for (int i = 0; i < lin_sys->rows * lin_sys->cols; i++){
+        printf("%d: %Lf\n",rank,lin_sys->a[i]);
+    }
+    for (int i = 0; i < lin_sys->rows; i++){
+        printf("%d: %Lf\n",rank,lin_sys->b[i]);
+    }
+    */
 
 
     while (iterations > 0){
@@ -273,30 +309,64 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
         for(int i = 0; i < lin_sys->cols; i++)
             old_x[i] = lin_sys->x[i];
 
+        
         for (int i = 0; i < lin_sys->rows; i++){
             long double sum = 0.0;
             for (int j = 0; j < lin_sys->cols; j++){
                 if (i + rank * lin_sys->rows != j)
                     sum += lin_sys->a[i*lin_sys->cols + j] * old_x[j];
             }
+            
+            /*if(rank == 0 && i == 0)
+                printf("0 %Lf\n",sum);
+            else if(rank == 1 && i == 0)
+                printf("25 %Lf\n",sum);
+            */
 
-            lin_sys->x[i+rank*lin_sys->rows] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+
+            //lin_sys->x[i+rank*lin_sys->rows] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+            lin_sys->x[i+x_offset] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+
+            if (rank == 1)
+                printf("%d || %d\n",rank*lin_sys->rows,x_offset);
+
+
             //if (rank == 1 && i == 0)
             //    printf("%Lf | %Lf\n | %Lf\n",lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)],lin_sys->b[i] , sum);
         }
+        
 
+        //if (rank == 1)
+        //    print_x(*lin_sys);
         MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Gather((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
+        
+        /*MPI_Gather((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
                    lin_sys->x, lin_sys->rows,MPI_LONG_DOUBLE,
                    0,MPI_COMM_WORLD);
+        */
 
+        MPI_Gatherv((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
+                    lin_sys->x,row_counts,b_displs,MPI_LONG_DOUBLE,
+                    0,MPI_COMM_WORLD);
+
+        if (rank == 0) {
+            printf("ITER: %d\n",iterations);
+            for (int i = 0; i < lin_sys->cols; i++)
+                printf("x[%d]: %Lf\n",i,lin_sys->x[i]);
+            printf("\n");
+        }
         iterations--;
     }
 
     if (rank != 0){
         free(lin_sys->a);
         free(lin_sys->b);
-        free(lin_sys->x);
+        free(lin_sys->x);    
+    }
+    else {
+        free(row_counts);
+        free(a_displs);
+        free(b_displs);
     }
     free(old_x);
 }
@@ -317,12 +387,22 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
                 if (j != i) 
                     sum += lin_sys->a[i * lin_sys->cols + j] * old_x[j];
             }
+            /*if(i == 0)
+                printf("0 %Lf\n",sum);
+            else if(i == 25)
+                printf("25 %Lf\n",sum);
+            */
+
             lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i] * 
                              (lin_sys->b[i] - sum));
             //if (i == 25)
             //    printf("%Lf | %Lf | %Lf\n",lin_sys->a[i + lin_sys->cols * i],lin_sys->b[i], sum);
             
         }
+        printf("ITER: %d\n",iterations);
+        for (int i = 0; i < lin_sys->cols; i++)
+            printf("x[%d]: %Lf\n",i,lin_sys->x[i]);
+        printf("\n");
         iterations--;
     }
 
