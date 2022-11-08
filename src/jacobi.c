@@ -302,12 +302,12 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     }
     */
 
-    for(int i = 0; rank == 0 && i < n_procs; i++){
+    /*for(int i = 0; rank == 0 && i < n_procs; i++){
         printf("RANK %d\n",i);
         printf("b_offset: %d\n",b_displs[i]);
         printf("a_offset: %d\n",a_displs[i]);
         printf("---");
-    }
+    }*/
 
 
     while (iterations > 0){
@@ -332,7 +332,8 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
 
 
             //lin_sys->x[i+rank*lin_sys->rows] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
-            lin_sys->x[i+x_offset] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+            //lin_sys->x[i+x_offset] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
+            lin_sys->x[i+x_offset] = (1/lin_sys->a[i*lin_sys->cols + i + x_offset]) * (lin_sys->b[i] - sum);
 
 
 
@@ -350,7 +351,8 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
                    0,MPI_COMM_WORLD);
         */
 
-        MPI_Gatherv((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
+        printf("OFFSET | %d | %d | %d\n",rank,x_offset, rank * lin_sys->rows);
+        MPI_Gatherv((rank == 0) ? MPI_IN_PLACE : lin_sys->x +x_offset,lin_sys->rows,MPI_LONG_DOUBLE,
                     lin_sys->x,row_counts,b_displs,MPI_LONG_DOUBLE,
                     0,MPI_COMM_WORLD);
 
@@ -394,8 +396,8 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
 
             lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i] * 
                              (lin_sys->b[i] - sum));
-            //if (i == 25)
-            //    printf("%Lf | %Lf | %Lf\n",lin_sys->a[i + lin_sys->cols * i],lin_sys->b[i], sum);
+            if (i == 34)
+                printf("%Lf | %Lf | %Lf\n",lin_sys->a[i + lin_sys->cols * i],lin_sys->b[i], sum);
             
         }
         iterations--;
