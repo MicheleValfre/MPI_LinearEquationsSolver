@@ -94,7 +94,7 @@ int main(int argc, char ** argv){
         printf("Error: %s\n",les_strerror(les_error));
         return 0;
     }
-    //print_x(lin_sys);
+    print_x(lin_sys);
 
     #ifdef PARALLEL
     }
