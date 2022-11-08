@@ -320,19 +320,10 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
         for (int i = 0; i < lin_sys->rows; i++){
             long double sum = 0.0;
             for (int j = 0; j < lin_sys->cols; j++){
-                if (i + rank * lin_sys->rows != j)
+                if (i + x_offset != j)
                     sum += lin_sys->a[i*lin_sys->cols + j] * old_x[j];
             }
             
-            /*if(rank == 0 && i == 0)
-                printf("0 %Lf\n",sum);
-            else if(rank == 1 && i == 0)
-                printf("25 %Lf\n",sum);
-            */
-
-
-            //lin_sys->x[i+rank*lin_sys->rows] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
-            //lin_sys->x[i+x_offset] = (1/lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)]) * (lin_sys->b[i] - sum);
             lin_sys->x[i+x_offset] = (1/lin_sys->a[i*lin_sys->cols + i + x_offset]) * (lin_sys->b[i] - sum);
 
 
@@ -388,9 +379,9 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
                 if (j != i) 
                     sum += lin_sys->a[i * lin_sys->cols + j] * old_x[j];
             }
-            /*if(i == 0)
-                printf("0 %Lf\n",sum);
-            else if(i == 25)
+            if(i == 34)
+                printf("%d %Lf\n",iterations,sum);
+            /*else if(i == 25)
                 printf("25 %Lf\n",sum);
             */
 
