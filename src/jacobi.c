@@ -231,8 +231,8 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
                 proc_cntr = 0;
         }
         //displs
-        initArray(&a_displs,n_procs,NULL);
-        initArray(&b_displs,n_procs,NULL);
+        initArray_Int(&a_displs,n_procs,NULL);
+        initArray_Int(&b_displs,n_procs,NULL);
         a_displs[0] = 0;
         b_displs[0] = 0;
         for(int i = 1; i < n_procs; i++){
