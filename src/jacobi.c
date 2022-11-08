@@ -302,6 +302,13 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     }
     */
 
+    for(int i = 0; rank == 0 && i < n_procs; i++){
+        printf("RANK %d\n",i);
+        printf("b_offset: %d\n",b_displs[i]);
+        printf("a_offset: %d\n",a_displs[i]);
+        printf("---");
+    }
+
 
     while (iterations > 0){
         MPI_Bcast(lin_sys->x,lin_sys->cols,MPI_LONG_DOUBLE,0,MPI_COMM_WORLD);
