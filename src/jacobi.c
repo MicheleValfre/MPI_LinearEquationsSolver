@@ -244,7 +244,6 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     if (rank == 0)
         lin_sys->rows = lin_sys->rows / n_procs;
 
-    //MPI_Bcast(&lin_sys->rows,1,MPI_INTEGER,0,MPI_COMM_WORLD);
     if (rank == 0) {
         for(int i = 1; i < n_procs; i++){
             MPI_Send(row_counts+i,1,MPI_INTEGER,i,0,MPI_COMM_WORLD);
@@ -293,23 +292,6 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
             row_counts[i] /= lin_sys->cols;
     }
     
-    //TODO provare su paradigm con numero dispari di processi
-    /*for (int i = 0; i < lin_sys->rows * lin_sys->cols; i++){
-        printf("%d: %Lf\n",rank,lin_sys->a[i]);
-    }
-    for (int i = 0; i < lin_sys->rows; i++){
-        printf("%d: %Lf\n",rank,lin_sys->b[i]);
-    }
-    */
-
-    /*for(int i = 0; rank == 0 && i < n_procs; i++){
-        printf("RANK %d\n",i);
-        printf("b_offset: %d\n",b_displs[i]);
-        printf("a_offset: %d\n",a_displs[i]);
-        printf("---");
-    }*/
-
-
     while (iterations > 0){
         MPI_Bcast(lin_sys->x,lin_sys->cols,MPI_LONG_DOUBLE,0,MPI_COMM_WORLD);
 
@@ -325,24 +307,12 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
             }
             
             lin_sys->x[i+x_offset] = (1/lin_sys->a[i*lin_sys->cols + i + x_offset]) * (lin_sys->b[i] - sum);
-
-
-
-            //if (rank == 1 && i == 0)
-            //    printf("%Lf | %Lf\n | %Lf\n",lin_sys->a[i * lin_sys->cols + (i + rank*lin_sys->rows)],lin_sys->b[i] , sum);
         }
         
 
-        //if (rank == 1)
-        //    print_x(*lin_sys);
         MPI_Barrier(MPI_COMM_WORLD);
         
-        /*MPI_Gather((rank == 0) ? MPI_IN_PLACE : lin_sys->x + rank * lin_sys->rows,lin_sys->rows,MPI_LONG_DOUBLE,
-                   lin_sys->x, lin_sys->rows,MPI_LONG_DOUBLE,
-                   0,MPI_COMM_WORLD);
-        */
 
-        printf("OFFSET | %d | %d | %d\n",rank,x_offset, rank * lin_sys->rows);
         MPI_Gatherv((rank == 0) ? MPI_IN_PLACE : lin_sys->x +x_offset,lin_sys->rows,MPI_LONG_DOUBLE,
                     lin_sys->x,row_counts,b_displs,MPI_LONG_DOUBLE,
                     0,MPI_COMM_WORLD);
@@ -379,16 +349,9 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
                 if (j != i) 
                     sum += lin_sys->a[i * lin_sys->cols + j] * old_x[j];
             }
-            if(i == 34)
-                printf("%d %Lf\n",iterations,sum);
-            /*else if(i == 25)
-                printf("25 %Lf\n",sum);
-            */
 
             lin_sys->x[i] = (1/lin_sys->a[i * lin_sys->cols + i] * 
                              (lin_sys->b[i] - sum));
-            if (i == 34)
-                printf("%Lf | %Lf | %Lf\n",lin_sys->a[i + lin_sys->cols * i],lin_sys->b[i], sum);
             
         }
         iterations--;
