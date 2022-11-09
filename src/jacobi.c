@@ -310,7 +310,7 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
         }
         
 
-        MPI_Barrier(MPI_COMM_WORLD);
+        //MPI_Barrier(MPI_COMM_WORLD);
         
 
         MPI_Gatherv((rank == 0) ? MPI_IN_PLACE : lin_sys->x +x_offset,lin_sys->rows,MPI_LONG_DOUBLE,
