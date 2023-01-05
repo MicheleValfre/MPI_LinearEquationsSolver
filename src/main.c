@@ -17,6 +17,9 @@ void print_usage(){
     #endif
 }
 
+
+
+
 void parse_args(int argc, char ** argv, char ** filename, int * iterations){
     *filename = argv[1];
 
@@ -94,6 +97,7 @@ int main(int argc, char ** argv){
         printf("Error: %s\n",les_strerror(les_error));
         return 0;
     }
+
     print_x(lin_sys);
 
     #ifdef PARALLEL
