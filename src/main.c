@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <stdint.h>
 #include <inttypes.h>
 
@@ -47,9 +47,7 @@ int main(int argc, char ** argv){
     int iterations;
     FILE * file;
     uint64_t s_time,e_time;
-    long int ns;
-    time_t sec;
-    struct timespec spec;
+    struct timeval t_val;
 
   
     linear_equation_system lin_sys;
@@ -87,10 +85,9 @@ int main(int argc, char ** argv){
     }
     #endif
 
-    clock_gettime(CLOCK_REALTIME, &spec);
-    sec = spec.tv_sec;
-    ns = spec.tv_nsec;
-    s_time = (uint64_t) sec * BILLION + (uint64_t) ns;
+    gettimeofday(&t_val,NULL);
+
+    s_time = (uint64_t)(BILLION * t_val.tv_sec + t_val.tv_usec); 
 
 
     errno = 0;
@@ -117,10 +114,8 @@ int main(int argc, char ** argv){
         return 0;
     }
 
-    clock_gettime(CLOCK_REALTIME, &spec);
-    sec = spec.tv_sec;
-    ns = spec.tv_nsec;
-    e_time = (uint64_t) sec * BILLION + (uint64_t) ns;
+    gettimeofday(&t_val,NULL);
+    e_time = (uint64_t)(BILLION * t_val.tv_sec + t_val.tv_usec); 
 
     printf("%"PRIu64"\n",e_time-s_time);
 
