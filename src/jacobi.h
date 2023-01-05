@@ -2,6 +2,7 @@
 #define JACOBI_H
 
 #include <stdio.h>
+#include <inttypes.h>
 
 
 typedef enum {
@@ -30,6 +31,6 @@ linear_equation_system * load_from_file(linear_equation_system * lin_sys,FILE * 
 //NOTE: num_procs is ignored when algo_type == SEQUENTIAL
 void jacobi(linear_equation_system * lin_sys, int iterations);
 
-void print_x(linear_equation_system l_sys);
+void print_x(linear_equation_system l_sys, uintmax_t time);
 
 #endif

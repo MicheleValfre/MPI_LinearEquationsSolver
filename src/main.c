@@ -15,6 +15,7 @@
 
 #define BILLION  1000000000L
 
+
 void print_usage(){
     #ifdef PARALLEL
     printf("\nusage:\n\n  ./solver_parallel {filename} {number of iterations}\n\nwhere:\n\n");
@@ -117,9 +118,10 @@ int main(int argc, char ** argv){
     gettimeofday(&t_val,NULL);
     e_time = (uint64_t)(BILLION * t_val.tv_sec + t_val.tv_usec); 
 
-    printf("%"PRIu64"\n",e_time-s_time);
+    //printf("%"PRIu64"\n",e_time-s_time);
 
-    print_x(lin_sys);
+    print_x(lin_sys,e_time-s_time);
+
 
     #ifdef PARALLEL
     }

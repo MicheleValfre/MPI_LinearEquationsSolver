@@ -10,6 +10,7 @@
 
 #include "jacobi.h"
 
+int N_PROCS = -1;
 les_error_t les_error = NO_ERROR;
 int matrix_size = 0;
 
@@ -218,6 +219,7 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
     
     MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    N_PROCS = n_procs;
 
     row_counts = NULL;
     a_displs = NULL;
@@ -361,7 +363,13 @@ void jacobi(linear_equation_system * lin_sys, int iterations){
 #endif
 
 
-void print_x(linear_equation_system l_sys){
+void print_x(linear_equation_system l_sys, uintmax_t time){
+    
+    if (N_PROCS > 0)
+        printf("%d	%"PRIu64"\n",N_PROCS,time);
+    else
+        printf("%"PRIu64"\n",time);
+
     for (int i = 0; i < l_sys.cols; i++){
         printf("x_%d: %Lf\n",i,l_sys.x[i]);
     }
