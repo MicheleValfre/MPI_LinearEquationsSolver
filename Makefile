@@ -1,6 +1,6 @@
 MPICC := mpicc
 MPI_DEFINES := -DPARALLEL
-FLAGS := -g -Wall -lm -std=c99
+FLAGS := -g -Wall -lm -lc 
 BUILD_DIR := ./build
 SRC_DIR := ./src
 INCLUDES := -I./src

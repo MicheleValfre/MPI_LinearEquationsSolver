@@ -1,13 +1,19 @@
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #ifdef PARALLEL
 #include <mpi.h>
 #endif
 
 #include "jacobi.h"
+
+#define BILLION  1000000000L
 
 void print_usage(){
     #ifdef PARALLEL
@@ -40,6 +46,12 @@ int main(int argc, char ** argv){
     char * filename;
     int iterations;
     FILE * file;
+    uint64_t s_time,e_time;
+    long int ns;
+    time_t sec;
+    struct timespec spec;
+
+  
     linear_equation_system lin_sys;
 
 
@@ -74,6 +86,13 @@ int main(int argc, char ** argv){
     #ifdef PARALLEL
     }
     #endif
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+    sec = spec.tv_sec;
+    ns = spec.tv_nsec;
+    s_time = (uint64_t) sec * BILLION + (uint64_t) ns;
+
+
     errno = 0;
     les_error = NO_ERROR;
     jacobi(&lin_sys,iterations);
@@ -97,6 +116,13 @@ int main(int argc, char ** argv){
         printf("Error: %s\n",les_strerror(les_error));
         return 0;
     }
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+    sec = spec.tv_sec;
+    ns = spec.tv_nsec;
+    e_time = (uint64_t) sec * BILLION + (uint64_t) ns;
+
+    printf("%"PRIu64"\n",e_time-s_time);
 
     print_x(lin_sys);
 
