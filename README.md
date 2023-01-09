@@ -1,11 +1,9 @@
 # Parallel Linear Equations System Solver Using The Jacobi Method
-The following is a linear equations system solver developed for a university project. Both the sequential and parallel versions of the code are included.
+The following is a linear equations system solver developed for a university project. It is an implementation of the Jacobi iterative method. Both the sequential and parallel versions of the code are included.
 
 ## Build
-In order to build both the solver and the test suite, run the followings:
+In order to build both the sequential and the parallel version of the solver, run the followings:
 ```
-git submodule init
-git submodule update 
 mkdir build
 make
 ```
@@ -17,7 +15,7 @@ make clean
 
 ## Usage
 ```
-./solver {filename} {number of iterations} {datatype}
+./solver_[parallel | sequential] {filename} {number of iterations} {datatype}
 ```
 
 ## Data
